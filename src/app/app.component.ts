@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { rawData } from './resources/unemployment';
 
 @Component({
   selector: 'app-root',
@@ -7,4 +8,6 @@ import { Component } from '@angular/core';
 })
 export class AppComponent {
   title = 'angular-d3-chart';
+  
+  data = rawData;
 }

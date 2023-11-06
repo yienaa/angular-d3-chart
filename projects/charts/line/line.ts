@@ -8,9 +8,8 @@ import { ChartBase } from '../utils/chart';
   selector: 'lib-line',
   standalone: true,
   imports: [CommonModule],
-  inputs: ['data', 'valueKey', 'xKey', 'yKey', 'width', 'height', 'marginTop', 'marginLeft', 'numberOfTicks'],
   template: '<div #chart></div>',
-  styleUrls: ['./line.css']
+  styleUrls: ['./line.scss']
 })
 export class LineComponent implements IChart, OnInit, OnChanges {
   @ViewChild('chart', { static: true }) element: any;
@@ -26,6 +25,7 @@ export class LineComponent implements IChart, OnInit, OnChanges {
 
   #lineData: d3.InternMap<string, any[]>;
   chart: LineChart;
+  color = d3.scaleOrdinal(d3.schemeCategory10);
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && !changes['data'].currentValue && changes['groupKey'] && changes['groupKey'].currentValue) {
@@ -36,7 +36,30 @@ export class LineComponent implements IChart, OnInit, OnChanges {
   ngOnInit() {
     this.chart = new LineChart(this.width, this.height, this.marginTop, this.marginLeft, this.numberOfTicks);
     const svg: SVGType = this.chart.getSVG(this.element.nativeElement);
-    const x = this.chart.xAxis(svg, this.data, this.xKey);
+    const {x, xAxis} = this.chart.xAxis(svg, this.data, this.xKey);
+    const {y, yAxis} = this.chart.yAxis(svg, this.data, this.yKey);
+
+    this.drawSeries(svg, x, y);
+  }
+
+  drawSeries(svg: SVGType, x: any, y: d3.ScaleLinear<number, number, never>) {
+    const group = d3.group(this.data, (d: any) => d?.[this.groupKey]);
+
+    svg
+      .selectAll('.line')
+      .append('g')
+      .attr('class', 'line')
+      .data(group)
+      .enter()
+      .append('path')
+      .attr('d', (d: any) => {
+        return d3.line()
+          .x((d: any) => x(new Date(d[this.xKey])))
+          .y((d: any) => y(d[this.yKey]))(d[1]);
+      })
+      .style('stroke', (d: any) => this.color(d[0]))
+      .style('stroke-width', 2)
+      .style('fill', 'none');
   }
 }
 

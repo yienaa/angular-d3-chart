@@ -13,7 +13,7 @@ export class ChartBase implements IChartBase {
         this.width = w ?? 500;
         this.height = h ?? 500;
         this.marginTop = mt ?? 10;
-        this.marginLeft = ml ?? 10;
+        this.marginLeft = ml ?? 50;
         this.numberOfTicks = n ?? 5;
     }
 
@@ -52,5 +52,28 @@ export class ChartBase implements IChartBase {
             .call(xAxis);
 
         return { x, xAxis }
+    }
+
+    public yAxis(svg: SVGType, data: DataType, yKey: any): {y: d3.ScaleLinear<number, number, never>, yAxis: d3.Axis<d3.NumberValue>} {
+        if (!data?.[0]?.[yKey]) {
+            throw new Error('yKey is not present in data');
+        }
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, (d: any) => d[yKey]) as number])
+            .range([this.height - 100, 0]);
+
+        const yAxis = d3.axisLeft(y)
+            .tickSize(0)
+            .tickPadding(10)
+            .ticks(this.numberOfTicks)
+            .tickSizeInner(-this.width + 100);
+
+        svg
+            .append('g')
+            .attr('class', 'y-axis')
+            .call(yAxis);
+
+        return { y, yAxis };
     }
 }
